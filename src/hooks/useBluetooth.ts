@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { BleClient } from '@capacitor-community/bluetooth-le';
+import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
 
 export interface DeviceReading {
   temperature: number;
@@ -11,6 +11,8 @@ export const useBluetooth = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [deviceName, setDeviceName] = useState<string | null>(null);
+  const [discoveredDevices, setDiscoveredDevices] = useState<BleDevice[]>([]);
   const [currentReading, setCurrentReading] = useState<DeviceReading>({
     temperature: 0,
     kickCount: 0,
@@ -29,13 +31,17 @@ export const useBluetooth = () => {
 
   const scanForDevices = useCallback(async () => {
     setIsScanning(true);
+    setDiscoveredDevices([]);
+    const devices: BleDevice[] = [];
+    
     try {
       await BleClient.requestLEScan(
         { services: [] },
         (result) => {
-          if (result.device.name?.includes('FetalTracker')) {
-            // Found the fetal tracker device
-            console.log('Found device:', result.device);
+          // Add device if not already in the list and has a name
+          if (result.device.name && !devices.find(d => d.deviceId === result.device.deviceId)) {
+            devices.push(result.device);
+            setDiscoveredDevices([...devices]);
           }
         }
       );
@@ -51,15 +57,21 @@ export const useBluetooth = () => {
     }
   }, []);
 
-  const connectToDevice = useCallback(async (id: string) => {
+  const connectToDevice = useCallback(async (id: string, name: string) => {
     try {
+      await BleClient.stopLEScan();
+      setIsScanning(false);
+      
       await BleClient.connect(id, () => {
         console.log('Device disconnected');
         setIsConnected(false);
         setDeviceId(null);
+        setDeviceName(null);
       });
       setIsConnected(true);
       setDeviceId(id);
+      setDeviceName(name);
+      setDiscoveredDevices([]);
       return true;
     } catch (error) {
       console.error('Connection failed:', error);
@@ -73,6 +85,7 @@ export const useBluetooth = () => {
         await BleClient.disconnect(deviceId);
         setIsConnected(false);
         setDeviceId(null);
+        setDeviceName(null);
       } catch (error) {
         console.error('Disconnect failed:', error);
       }
@@ -110,6 +123,8 @@ export const useBluetooth = () => {
     isConnected,
     isScanning,
     deviceId,
+    deviceName,
+    discoveredDevices,
     currentReading,
     initializeBluetooth,
     scanForDevices,

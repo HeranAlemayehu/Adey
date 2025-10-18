@@ -19,9 +19,12 @@ const Home = () => {
   const {
     isConnected,
     isScanning,
+    deviceName,
+    discoveredDevices,
     currentReading,
     initializeBluetooth,
     scanForDevices,
+    connectToDevice,
     disconnect,
     readData,
   } = useBluetooth();
@@ -115,6 +118,15 @@ const Home = () => {
     }
   };
 
+  const handleDeviceSelect = async (deviceId: string, deviceName: string) => {
+    const connected = await connectToDevice(deviceId, deviceName);
+    if (connected) {
+      toast.success(`Connected to ${deviceName}`);
+    } else {
+      toast.error('Failed to connect to device');
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -139,8 +151,11 @@ const Home = () => {
       <BluetoothStatus
         isConnected={isConnected}
         isScanning={isScanning}
+        deviceName={deviceName}
+        discoveredDevices={discoveredDevices}
         onScan={handleScan}
         onDisconnect={disconnect}
+        onDeviceSelect={handleDeviceSelect}
       />
 
       <div className="my-6">
