@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Thermometer, Activity, Heart, Calendar as CalendarIcon } from 'lucide-react';
+import { Activity, Heart, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -203,12 +203,6 @@ const Home = () => {
         <h2 className="text-xl font-bold text-foreground mb-4">Current Readings</h2>
         <div className="grid grid-cols-2 gap-4">
           <ReadingCard
-            icon={<Thermometer className="w-5 h-5" />}
-            label="Temperature"
-            value={currentReading.temperature.toFixed(1)}
-            unit="°C"
-          />
-          <ReadingCard
             icon={<Activity className="w-5 h-5" />}
             label="Kick Count"
             value={currentReading.kickCount}
@@ -219,7 +213,6 @@ const Home = () => {
             label="Heartbeat"
             value={currentReading.heartbeat}
             unit="bpm"
-            className="col-span-2"
           />
         </div>
       </div>

@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Phone, User, Thermometer, Bell, Moon, Sun, LogOut } from 'lucide-react';
+import { Phone, Bell, Moon, Sun, LogOut } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
@@ -16,7 +16,6 @@ const Settings = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<any>({
-    temperature_unit: 'celsius',
     notifications_enabled: true,
     emergency_monitoring_enabled: true,
   });
@@ -154,28 +153,6 @@ const Settings = () => {
                 updateSettings({ theme: newTheme });
               }}
             />
-          </div>
-        </Card>
-
-        {/* Temperature Unit */}
-        <Card className="p-6 rounded-3xl border-2 bg-card shadow-card">
-          <div className="flex items-start gap-3">
-            <Thermometer className="w-5 h-5 text-primary mt-1" />
-            <div className="flex-1">
-              <Label className="text-foreground font-semibold mb-2 block">Temperature Unit</Label>
-              <Select
-                value={settings.temperature_unit}
-                onValueChange={(value) => updateSettings({ temperature_unit: value })}
-              >
-                <SelectTrigger className="rounded-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="celsius">Celsius (°C)</SelectItem>
-                  <SelectItem value="fahrenheit">Fahrenheit (°F)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </Card>
 

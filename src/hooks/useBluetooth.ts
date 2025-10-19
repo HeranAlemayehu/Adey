@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
 
 export interface DeviceReading {
-  temperature: number;
   kickCount: number;
   heartbeat: number;
 }
@@ -14,7 +13,6 @@ export const useBluetooth = () => {
   const [deviceName, setDeviceName] = useState<string | null>(null);
   const [discoveredDevices, setDiscoveredDevices] = useState<BleDevice[]>([]);
   const [currentReading, setCurrentReading] = useState<DeviceReading>({
-    temperature: 0,
     kickCount: 0,
     heartbeat: 0,
   });
@@ -99,14 +97,12 @@ export const useBluetooth = () => {
       // These UUIDs should match your Arduino device's characteristics
       // This is a placeholder - update with actual UUIDs from your device
       const SERVICE_UUID = '0000180f-0000-1000-8000-00805f9b34fb';
-      const TEMP_CHARACTERISTIC = '00002a19-0000-1000-8000-00805f9b34fb';
       const KICK_CHARACTERISTIC = '00002a1a-0000-1000-8000-00805f9b34fb';
       const HEART_CHARACTERISTIC = '00002a1b-0000-1000-8000-00805f9b34fb';
 
       // Read characteristics from the device
       // Note: You'll need to implement actual data parsing based on your Arduino's data format
       const reading: DeviceReading = {
-        temperature: Math.random() * 2 + 36, // Placeholder
         kickCount: Math.floor(Math.random() * 10),
         heartbeat: Math.floor(Math.random() * 20 + 120),
       };

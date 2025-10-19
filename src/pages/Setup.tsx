@@ -41,8 +41,8 @@ const Setup = () => {
         .insert({
           user_id: user.id,
           theme: 'light',
-          temperature_unit: 'celsius',
           notifications_enabled: true,
+          emergency_monitoring_enabled: true,
         });
 
       toast.success('Setup complete!');
