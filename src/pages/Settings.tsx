@@ -18,6 +18,7 @@ const Settings = () => {
   const [settings, setSettings] = useState<any>({
     temperature_unit: 'celsius',
     notifications_enabled: true,
+    emergency_monitoring_enabled: true,
   });
   const [contacts, setContacts] = useState<any[]>([]);
   const [newContact, setNewContact] = useState({ type: 'doctor', name: '', phone: '' });
@@ -180,7 +181,7 @@ const Settings = () => {
 
         {/* Notifications */}
         <Card className="p-6 rounded-3xl border-2 bg-card shadow-card">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-primary" />
               <div>
@@ -191,6 +192,16 @@ const Settings = () => {
             <Switch
               checked={settings.notifications_enabled}
               onCheckedChange={(checked) => updateSettings({ notifications_enabled: checked })}
+            />
+          </div>
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div>
+              <Label className="text-foreground font-semibold">Emergency Monitoring</Label>
+              <p className="text-sm text-muted-foreground">Auto-call on abnormal readings</p>
+            </div>
+            <Switch
+              checked={settings.emergency_monitoring_enabled}
+              onCheckedChange={(checked) => updateSettings({ emergency_monitoring_enabled: checked })}
             />
           </div>
         </Card>

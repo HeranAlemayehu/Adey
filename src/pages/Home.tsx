@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useBluetooth } from '@/hooks/useBluetooth';
+import { useEmergencyMonitoring } from '@/hooks/useEmergencyMonitoring';
 import PregnancyHeader from '@/components/PregnancyHeader';
 import BluetoothStatus from '@/components/BluetoothStatus';
 import ReadingCard from '@/components/ReadingCard';
@@ -15,6 +16,8 @@ const Home = () => {
   const navigate = useNavigate();
   const [pregnancyInfo, setPregnancyInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [emergencyContacts, setEmergencyContacts] = useState<any[]>([]);
+  const [monitoringEnabled, setMonitoringEnabled] = useState(true);
   
   const {
     isConnected,
@@ -29,9 +32,17 @@ const Home = () => {
     readData,
   } = useBluetooth();
 
+  // Monitor kick count and trigger emergency alerts
+  useEmergencyMonitoring(currentReading.kickCount, emergencyContacts, {
+    kickCountMin: 10,
+    kickCountMax: 50,
+    enabled: monitoringEnabled && isConnected,
+  });
+
   useEffect(() => {
     checkAuth();
     loadPregnancyInfo();
+    loadEmergencyContacts();
     initializeBluetooth();
   }, []);
 
@@ -78,6 +89,36 @@ const Home = () => {
       console.error('Error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEmergencyContacts = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('emergency_contacts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('contact_type', { ascending: true });
+
+      if (data) {
+        setEmergencyContacts(data);
+      }
+
+      // Load monitoring settings
+      const { data: settingsData } = await supabase
+        .from('user_settings')
+        .select('emergency_monitoring_enabled')
+        .eq('user_id', user.id)
+        .single();
+
+      if (settingsData) {
+        setMonitoringEnabled(settingsData.emergency_monitoring_enabled ?? true);
+      }
+    } catch (error) {
+      console.error('Error loading emergency contacts:', error);
     }
   };
 
