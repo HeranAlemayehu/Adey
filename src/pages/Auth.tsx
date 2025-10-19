@@ -28,6 +28,26 @@ const step1Schema = z.object({
 }, {
   message: 'Last menstrual cycle is required for pregnant users',
   path: ['lastMenstrualCycle'],
+}).refine((data) => {
+  // Validate age - must be at least 13 years old
+  const dob = new Date(data.dateOfBirth);
+  const age = Math.floor((new Date().getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  return age >= 13;
+}, {
+  message: 'You must be at least 13 years old to register',
+  path: ['dateOfBirth'],
+}).refine((data) => {
+  // Validate gestational age - must not exceed 60 weeks
+  if (data.isPregnant === 'yes' && data.lastMenstrualCycle) {
+    const lmpDate = new Date(data.lastMenstrualCycle);
+    const today = new Date();
+    const gestationalWeeks = Math.floor((today.getTime() - lmpDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    return gestationalWeeks <= 60;
+  }
+  return true;
+}, {
+  message: 'Gestational age cannot exceed 60 weeks. Please verify your last menstrual cycle date.',
+  path: ['lastMenstrualCycle'],
 });
 
 // Step 2 schema - Medical conditions

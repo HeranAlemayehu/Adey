@@ -211,26 +211,6 @@ const Home = () => {
 
       <DailyNoteInput onSave={handleSaveNote} />
 
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        <Button
-          onClick={() => navigate('/calendar')}
-          variant="outline"
-          size="lg"
-          className="rounded-full border-2"
-        >
-          <CalendarIcon className="w-5 h-5 mr-2" />
-          Calendar
-        </Button>
-        <Button
-          onClick={() => navigate('/journal')}
-          variant="outline"
-          size="lg"
-          className="rounded-full border-2"
-        >
-          <BookOpen className="w-5 h-5 mr-2" />
-          Journal
-        </Button>
-      </div>
     </Layout>
   );
 };

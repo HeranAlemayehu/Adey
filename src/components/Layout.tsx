@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Calendar, BarChart3, Settings } from 'lucide-react';
+import { Home, Calendar, BarChart3, Settings, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FloatingFAQ from './FloatingFAQ';
 
@@ -15,6 +15,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
+    { icon: BookOpen, label: 'Journal', path: '/journal' },
     { icon: BarChart3, label: 'Stats', path: '/statistics' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
