@@ -61,7 +61,7 @@ const Setup = () => {
           <div className="inline-block p-4 rounded-full bg-primary/20 mb-4">
             <Heart className="w-12 h-12 text-primary fill-current animate-pulse" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Welcome!</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Welcome to Adey!</h1>
           <p className="text-muted-foreground">
             Let's set up your pregnancy tracking
           </p>

@@ -258,7 +258,7 @@ const Auth = () => {
         
         <h1 className="text-3xl font-bold text-center text-foreground mb-2">
           {isLogin 
-            ? 'Welcome Back' 
+            ? 'Welcome Back to Adey' 
             : signupStep === 1 
             ? 'Personal Information' 
             : signupStep === 2 
@@ -267,7 +267,7 @@ const Auth = () => {
         </h1>
         <p className="text-center text-muted-foreground mb-8">
           {isLogin 
-            ? 'Sign in to continue' 
+            ? 'Sign in to continue tracking your pregnancy' 
             : signupStep === 1 
             ? 'Tell us about yourself' 
             : signupStep === 2 
