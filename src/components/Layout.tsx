@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Calendar, BarChart3, BookOpen, Settings, MessageCircle } from 'lucide-react';
+import { Home, Calendar, BarChart3, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import FloatingFAQ from './FloatingFAQ';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,7 +16,6 @@ const Layout = ({ children }: LayoutProps) => {
     { icon: Home, label: 'Home', path: '/' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
     { icon: BarChart3, label: 'Stats', path: '/statistics' },
-    { icon: MessageCircle, label: 'Chat', path: '/chat' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -24,6 +24,8 @@ const Layout = ({ children }: LayoutProps) => {
       <main className="pb-20 pt-4 px-4 max-w-md mx-auto">
         {children}
       </main>
+
+      <FloatingFAQ />
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border shadow-soft">
