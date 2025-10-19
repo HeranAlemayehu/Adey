@@ -7,10 +7,11 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Phone, Bell, Moon, Sun, LogOut } from 'lucide-react';
+import { Phone, Bell, Moon, Sun, LogOut, User } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
+import { differenceInWeeks } from 'date-fns';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -21,10 +22,14 @@ const Settings = () => {
   });
   const [contacts, setContacts] = useState<any[]>([]);
   const [newContact, setNewContact] = useState({ type: 'doctor', name: '', phone: '' });
+  const [profile, setProfile] = useState<any>(null);
+  const [pregnancyInfo, setPregnancyInfo] = useState<any>(null);
 
   useEffect(() => {
     loadSettings();
     loadContacts();
+    loadProfile();
+    loadPregnancyInfo();
   }, []);
 
   const loadSettings = async () => {
@@ -60,6 +65,40 @@ const Settings = () => {
       setContacts(data || []);
     } catch (error) {
       console.error('Error loading contacts:', error);
+    }
+  };
+
+  const loadProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
+
+  const loadPregnancyInfo = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('pregnancy_info')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      setPregnancyInfo(data);
+    } catch (error) {
+      console.error('Error loading pregnancy info:', error);
     }
   };
 
@@ -130,6 +169,48 @@ const Settings = () => {
           <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
           <p className="text-muted-foreground">Customize your app experience</p>
         </div>
+
+        {/* Personal Information */}
+        <Card className="p-6 rounded-3xl border-2 bg-card shadow-card">
+          <div className="flex items-center gap-3 mb-4">
+            <User className="w-5 h-5 text-primary" />
+            <Label className="text-foreground font-semibold text-lg">Personal Information</Label>
+          </div>
+
+          {profile && (
+            <div className="space-y-3">
+              <div className="p-3 rounded-2xl bg-muted/30">
+                <p className="text-sm text-muted-foreground">Name</p>
+                <p className="font-medium text-foreground">{profile.name}</p>
+              </div>
+              
+              <div className="p-3 rounded-2xl bg-muted/30">
+                <p className="text-sm text-muted-foreground">Age</p>
+                <p className="font-medium text-foreground">{profile.age} years</p>
+              </div>
+
+              {pregnancyInfo && (
+                <div className="p-3 rounded-2xl bg-muted/30">
+                  <p className="text-sm text-muted-foreground">Gestational Age</p>
+                  <p className="font-medium text-foreground">
+                    {differenceInWeeks(new Date(), new Date(pregnancyInfo.pregnancy_start_date))} weeks
+                  </p>
+                </div>
+              )}
+
+              {profile.medical_conditions && profile.medical_conditions.length > 0 && (
+                <div className="p-3 rounded-2xl bg-muted/30">
+                  <p className="text-sm text-muted-foreground mb-2">Pre-existing Medical Conditions</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {profile.medical_conditions.map((condition: string, index: number) => (
+                      <li key={index} className="text-foreground">{condition}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
 
         {/* Theme */}
         <Card className="p-6 rounded-3xl border-2 bg-card shadow-card">

@@ -30,8 +30,14 @@ const step1Schema = z.object({
   path: ['lastMenstrualCycle'],
 });
 
-// Step 2 schema - Account credentials
+// Step 2 schema - Medical conditions
 const step2Schema = z.object({
+  medicalConditions: z.array(z.string()).optional().default([]),
+  otherCondition: z.string().optional(),
+});
+
+// Step 3 schema - Account credentials
+const step3Schema = z.object({
   email: z.string().email('Invalid email address').max(255),
   password: z.string().min(6, 'Password must be at least 6 characters').max(72),
   confirmPassword: z.string(),
@@ -48,6 +54,7 @@ const loginSchema = z.object({
 
 type Step1Data = z.infer<typeof step1Schema>;
 type Step2Data = z.infer<typeof step2Schema>;
+type Step3Data = z.infer<typeof step3Schema>;
 type LoginData = z.infer<typeof loginSchema>;
 
 const Auth = () => {
@@ -55,6 +62,7 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [signupStep, setSignupStep] = useState(1);
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
+  const [step2Data, setStep2Data] = useState<Step2Data | null>(null);
   const [loading, setLoading] = useState(false);
 
   const step1Form = useForm<Step1Data>({
@@ -64,8 +72,16 @@ const Auth = () => {
     },
   });
 
-  const step2Form = useForm<Step2Data>({
+  const step2Form = useForm({
     resolver: zodResolver(step2Schema),
+    defaultValues: {
+      medicalConditions: [] as string[],
+      otherCondition: '',
+    },
+  });
+
+  const step3Form = useForm<Step3Data>({
+    resolver: zodResolver(step3Schema),
   });
 
   const loginForm = useForm<LoginData>({
@@ -98,7 +114,12 @@ const Auth = () => {
   };
 
   const handleStep2Submit = async (data: Step2Data) => {
-    if (!step1Data) return;
+    setStep2Data(data);
+    setSignupStep(3);
+  };
+
+  const handleStep3Submit = async (data: Step3Data) => {
+    if (!step1Data || !step2Data) return;
     
     setLoading(true);
 
@@ -120,6 +141,28 @@ const Auth = () => {
 
       if (signupError) throw signupError;
       if (!authData.user) throw new Error('Signup failed');
+
+      // Calculate age from date of birth
+      const dob = new Date(step1Data.dateOfBirth);
+      const age = Math.floor((new Date().getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+
+      // Prepare medical conditions
+      const medicalConditions = [...step2Data.medicalConditions];
+      if (step2Data.otherCondition?.trim()) {
+        medicalConditions.push(`Other: ${step2Data.otherCondition.trim()}`);
+      }
+
+      // Create user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: authData.user.id,
+          name: step1Data.name,
+          age: age,
+          medical_conditions: medicalConditions,
+        });
+
+      if (profileError) console.error('Error saving profile:', profileError);
 
       // If pregnant, calculate pregnancy info
       if (step1Data.isPregnant === 'yes' && step1Data.lastMenstrualCycle) {
@@ -171,6 +214,19 @@ const Auth = () => {
     setSignupStep(1);
   };
 
+  const handleBackToStep2 = () => {
+    setSignupStep(2);
+  };
+
+  const toggleCondition = (condition: string) => {
+    const current = step2Form.getValues('medicalConditions');
+    if (current.includes(condition)) {
+      step2Form.setValue('medicalConditions', current.filter(c => c !== condition));
+    } else {
+      step2Form.setValue('medicalConditions', [...current, condition]);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <Card className="w-full max-w-md p-8 rounded-3xl border-2 bg-card shadow-card">
@@ -181,10 +237,22 @@ const Auth = () => {
         </div>
         
         <h1 className="text-3xl font-bold text-center text-foreground mb-2">
-          {isLogin ? 'Welcome Back' : signupStep === 1 ? 'Personal Information' : 'Create Your Account'}
+          {isLogin 
+            ? 'Welcome Back' 
+            : signupStep === 1 
+            ? 'Personal Information' 
+            : signupStep === 2 
+            ? 'Medical History' 
+            : 'Create Your Account'}
         </h1>
         <p className="text-center text-muted-foreground mb-8">
-          {isLogin ? 'Sign in to continue' : signupStep === 1 ? 'Tell us about yourself' : 'Set up your login credentials'}
+          {isLogin 
+            ? 'Sign in to continue' 
+            : signupStep === 1 
+            ? 'Tell us about yourself' 
+            : signupStep === 2 
+            ? 'Help us understand your health needs' 
+            : 'Set up your login credentials'}
         </p>
 
         {isLogin ? (
@@ -293,7 +361,7 @@ const Auth = () => {
               Next
             </Button>
           </form>
-        ) : (
+        ) : signupStep === 2 ? (
           <form onSubmit={step2Form.handleSubmit(handleStep2Submit)} className="space-y-4">
             <Button
               type="button"
@@ -306,16 +374,73 @@ const Auth = () => {
             </Button>
 
             <div>
+              <Label className="text-foreground font-semibold">Do you have any pre-existing medical conditions?</Label>
+              <p className="text-sm text-muted-foreground mb-3">Select all that apply</p>
+              
+              <div className="space-y-2">
+                {['Hypertension', 'Preeclampsia', 'Diabetes', 'Asthma', 'Heart conditions', 'Previous miscarriage'].map((condition) => (
+                  <label key={condition} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-muted/50">
+                    <input
+                      type="checkbox"
+                      checked={step2Form.watch('medicalConditions').includes(condition)}
+                      onChange={() => toggleCondition(condition)}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-foreground">{condition}</span>
+                  </label>
+                ))}
+                
+                <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-muted/50">
+                  <input
+                    type="checkbox"
+                    checked={step2Form.watch('medicalConditions').includes('Other')}
+                    onChange={() => toggleCondition('Other')}
+                    className="w-4 h-4 rounded"
+                  />
+                  <span className="text-foreground">Other (please specify)</span>
+                </label>
+                
+                {step2Form.watch('medicalConditions').includes('Other') && (
+                  <Input
+                    {...step2Form.register('otherCondition')}
+                    placeholder="Please specify other condition"
+                    className="mt-2 rounded-full"
+                  />
+                )}
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full rounded-full"
+              size="lg"
+            >
+              Next
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={step3Form.handleSubmit(handleStep3Submit)} className="space-y-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleBackToStep2}
+              className="mb-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+
+            <div>
               <Label htmlFor="signup-email" className="text-foreground">Email</Label>
               <Input
                 id="signup-email"
                 type="email"
-                {...step2Form.register('email')}
+                {...step3Form.register('email')}
                 className="mt-1 rounded-full"
                 placeholder="your@email.com"
               />
-              {step2Form.formState.errors.email && (
-                <p className="text-sm text-destructive mt-1">{step2Form.formState.errors.email.message}</p>
+              {step3Form.formState.errors.email && (
+                <p className="text-sm text-destructive mt-1">{step3Form.formState.errors.email.message}</p>
               )}
             </div>
 
@@ -324,12 +449,12 @@ const Auth = () => {
               <Input
                 id="signup-password"
                 type="password"
-                {...step2Form.register('password')}
+                {...step3Form.register('password')}
                 className="mt-1 rounded-full"
                 placeholder="••••••••"
               />
-              {step2Form.formState.errors.password && (
-                <p className="text-sm text-destructive mt-1">{step2Form.formState.errors.password.message}</p>
+              {step3Form.formState.errors.password && (
+                <p className="text-sm text-destructive mt-1">{step3Form.formState.errors.password.message}</p>
               )}
             </div>
 
@@ -338,12 +463,12 @@ const Auth = () => {
               <Input
                 id="confirm-password"
                 type="password"
-                {...step2Form.register('confirmPassword')}
+                {...step3Form.register('confirmPassword')}
                 className="mt-1 rounded-full"
                 placeholder="••••••••"
               />
-              {step2Form.formState.errors.confirmPassword && (
-                <p className="text-sm text-destructive mt-1">{step2Form.formState.errors.confirmPassword.message}</p>
+              {step3Form.formState.errors.confirmPassword && (
+                <p className="text-sm text-destructive mt-1">{step3Form.formState.errors.confirmPassword.message}</p>
               )}
             </div>
 
