@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Calendar, BarChart3, BookOpen, Settings } from 'lucide-react';
+import { Home, Calendar, BarChart3, BookOpen, Settings, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -15,7 +15,7 @@ const Layout = ({ children }: LayoutProps) => {
     { icon: Home, label: 'Home', path: '/' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
     { icon: BarChart3, label: 'Stats', path: '/statistics' },
-    { icon: BookOpen, label: 'Journal', path: '/journal' },
+    { icon: MessageCircle, label: 'Chat', path: '/chat' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
